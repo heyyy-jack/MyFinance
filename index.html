@@ -1,0 +1,842 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#f2f2f7" id="themeMeta">
+<link rel="manifest" href="./manifest.json">
+<link rel="icon" href="./icons/icon-192.png">
+<link rel="apple-touch-icon" href="./icons/icon-192.png">
+<title>My Finance</title>
+<style>
+/* ---------- iOS design tokens ---------- */
+:root{
+  --bg:#f2f2f7;--card:#ffffff;--card2:#f2f2f7;--sep:rgba(60,60,67,.18);
+  --label:#000000;--label2:rgba(60,60,67,.6);--label3:rgba(60,60,67,.3);
+  --blue:#007aff;--green:#34c759;--red:#ff3b30;--orange:#ff9500;--purple:#af52de;--teal:#5ac8fa;
+  --fill:rgba(120,120,128,.12);--shadow:0 1px 2px rgba(0,0,0,.04);
+  --hero1:#007aff;--hero2:#5856d6;
+  --navbg:rgba(249,249,249,.94);--sheetbg:#f2f2f7;--inputbg:#ffffff;
+  color-scheme:light;
+}
+:root[data-theme="dark"]{
+  --bg:#000000;--card:#1c1c1e;--card2:#2c2c2e;--sep:rgba(84,84,88,.65);
+  --label:#ffffff;--label2:rgba(235,235,245,.6);--label3:rgba(235,235,245,.3);
+  --blue:#0a84ff;--green:#30d158;--red:#ff453a;--orange:#ff9f0a;--purple:#bf5af2;--teal:#64d2ff;
+  --fill:rgba(120,120,128,.36);--shadow:none;
+  --hero1:#0a84ff;--hero2:#5e5ce6;
+  --navbg:rgba(28,28,30,.94);--sheetbg:#1c1c1e;--inputbg:#2c2c2e;
+  color-scheme:dark;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#000000;--card:#1c1c1e;--card2:#2c2c2e;--sep:rgba(84,84,88,.65);
+    --label:#ffffff;--label2:rgba(235,235,245,.6);--label3:rgba(235,235,245,.3);
+    --blue:#0a84ff;--green:#30d158;--red:#ff453a;--orange:#ff9f0a;--purple:#bf5af2;--teal:#64d2ff;
+    --fill:rgba(120,120,128,.36);--shadow:none;
+    --hero1:#0a84ff;--hero2:#5e5ce6;
+    --navbg:rgba(28,28,30,.94);--sheetbg:#1c1c1e;--inputbg:#2c2c2e;
+    color-scheme:dark;
+  }
+}
+
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0}
+body{
+  min-height:100vh;background:var(--bg);color:var(--label);
+  font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue",Helvetica,Arial,sans-serif;
+  font-size:17px;line-height:1.35;-webkit-font-smoothing:antialiased;
+}
+button,input,select{font:inherit;color:inherit}
+.wrap{max-width:720px;margin:0 auto;padding:0 16px 120px}
+
+/* ---------- Large title header ---------- */
+.header{display:flex;align-items:flex-end;justify-content:space-between;padding:calc(env(safe-area-inset-top,0px) + 14px) 0 10px;gap:12px}
+.header .sub{font-size:13px;color:var(--label2);text-transform:uppercase;letter-spacing:.2px;font-weight:600}
+.header h1{font-size:34px;font-weight:700;letter-spacing:.37px;margin:2px 0 0}
+.hdr-actions{display:flex;gap:10px;align-items:center}
+.circle-btn{width:36px;height:36px;border-radius:50%;border:0;background:var(--fill);display:grid;place-items:center;font-size:16px;color:var(--blue);position:relative;cursor:pointer}
+.badge{position:absolute;top:-3px;right:-3px;background:var(--red);color:#fff;border-radius:10px;font-size:11px;font-weight:700;min-width:18px;height:18px;padding:0 5px;display:flex;align-items:center;justify-content:center}
+.pill{background:var(--fill);color:var(--label);border-radius:999px;padding:6px 12px;font-size:13px;font-weight:600}
+
+/* segmented control for theme */
+.seg{display:flex;background:var(--fill);border-radius:9px;padding:2px;margin:6px 0 14px}
+.seg button{flex:1;border:0;background:transparent;padding:7px 8px;border-radius:7px;font-size:13px;font-weight:600;color:var(--label);cursor:pointer}
+.seg button.on{background:var(--card);box-shadow:0 2px 6px rgba(0,0,0,.12)}
+
+/* ---------- Hero card ---------- */
+.hero{border-radius:20px;padding:20px;color:#fff;background:linear-gradient(135deg,var(--hero1),var(--hero2));margin-bottom:20px;box-shadow:var(--shadow)}
+.hero .eyebrow{font-size:13px;opacity:.85;font-weight:600}
+.hero .balance{font-size:40px;font-weight:700;letter-spacing:.3px;margin:4px 0 16px;font-variant-numeric:tabular-nums}
+.hero-foot{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.hero-foot span{font-size:12px;opacity:.8;display:block}
+.hero-foot b{font-size:16px;font-variant-numeric:tabular-nums}
+
+/* ---------- Section & grouped list ---------- */
+.section-title{font-size:13px;text-transform:uppercase;color:var(--label2);padding:0 16px 6px;letter-spacing:-.08px;display:flex;justify-content:space-between;align-items:center}
+.section-title button{background:none;border:0;color:var(--blue);font-size:15px;text-transform:none;font-weight:500;cursor:pointer}
+.group{background:var(--card);border-radius:12px;overflow:hidden;margin-bottom:22px;box-shadow:var(--shadow)}
+.row{display:flex;align-items:center;gap:12px;padding:11px 16px;min-height:44px;position:relative}
+.row+.row:before{content:"";position:absolute;left:16px;right:0;top:0;height:.5px;background:var(--sep)}
+.row .grow{flex:1;min-width:0}
+.row .title{font-size:17px;font-weight:400;overflow-wrap:anywhere}
+.row .meta{font-size:13px;color:var(--label2);margin-top:1px}
+.row .val{font-size:17px;font-variant-numeric:tabular-nums;white-space:nowrap}
+.icon{width:30px;height:30px;border-radius:7px;display:grid;place-items:center;color:#fff;font-size:15px;flex:none}
+.stat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:0;background:var(--card);border-radius:12px;overflow:hidden;margin-bottom:22px;box-shadow:var(--shadow)}
+.stat-grid .cell{padding:14px 12px;text-align:left;position:relative}
+.stat-grid .cell+.cell:before{content:"";position:absolute;left:0;top:14px;bottom:14px;width:.5px;background:var(--sep)}
+.cell .label{font-size:12px;color:var(--label2);font-weight:500}
+.cell strong{display:block;font-size:17px;margin-top:4px;font-variant-numeric:tabular-nums}
+
+.green{color:var(--green)}.red{color:var(--red)}.blue{color:var(--blue)}
+
+/* progress */
+.bar{height:6px;background:var(--fill);border-radius:6px;overflow:hidden;margin-top:8px}
+.bar i{display:block;height:100%;width:0;background:var(--blue);border-radius:6px;transition:width .4s ease}
+.bar i.ok{background:var(--green)}.bar i.warn{background:var(--orange)}.bar i.over{background:var(--red)}
+
+/* Buttons */
+.btn{border:0;border-radius:12px;padding:12px 16px;font-weight:600;font-size:17px;background:var(--blue);color:#fff;cursor:pointer;width:100%}
+.btn.plain{background:var(--fill);color:var(--blue)}
+.btn.small{width:auto;padding:6px 12px;font-size:15px;border-radius:999px}
+.btn.danger{background:transparent;color:var(--red);width:auto;padding:4px 8px;font-size:17px}
+.btn-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:0 0 22px}
+
+.empty{color:var(--label2);font-size:15px;padding:24px 16px;text-align:center}
+
+/* Tab bar (bottom, iOS style) */
+nav.tabbar{position:fixed;bottom:0;left:0;right:0;display:flex;justify-content:space-around;padding:6px 6px calc(env(safe-area-inset-bottom,0px) + 6px);background:var(--navbg);backdrop-filter:saturate(180%) blur(20px);-webkit-backdrop-filter:saturate(180%) blur(20px);border-top:.5px solid var(--sep);z-index:10}
+.tabbtn{flex:1;background:none;border:0;display:flex;flex-direction:column;align-items:center;gap:2px;color:var(--label2);font-size:10px;font-weight:500;padding:4px 0;cursor:pointer;max-width:120px}
+.tabbtn .gl{font-size:22px;line-height:1}
+.tabbtn.active{color:var(--blue)}
+
+/* Tab panels */
+.tabpanel{display:none}.tabpanel.active{display:block}
+
+/* Modal = iOS sheet */
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.4);display:none;align-items:flex-end;justify-content:center;z-index:20}
+.modal.show{display:flex}
+.sheet{width:100%;max-width:720px;max-height:92vh;overflow:auto;background:var(--sheetbg);border-radius:14px 14px 0 0;padding:8px 16px calc(env(safe-area-inset-bottom,0px) + 20px);animation:up .28s ease}
+@keyframes up{from{transform:translateY(100%)}to{transform:none}}
+.sheet-grab{width:36px;height:5px;border-radius:3px;background:var(--label3);margin:4px auto 10px}
+.sheet-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.sheet-head h2{font-size:17px;font-weight:600;margin:0;flex:1;text-align:center}
+.sheet-head button{background:none;border:0;color:var(--blue);font-size:17px;cursor:pointer;padding:6px 2px;min-width:60px;text-align:left}
+.sheet-head button.r{text-align:right}
+.form-group{background:var(--card);border-radius:12px;overflow:hidden;margin-bottom:16px}
+.field{display:flex;align-items:center;gap:12px;padding:11px 16px;position:relative}
+.field+.field:before{content:"";position:absolute;left:16px;right:0;top:0;height:.5px;background:var(--sep)}
+.field label{font-size:17px;min-width:96px}
+.field input,.field select{flex:1;min-width:0;border:0;background:transparent;font-size:17px;text-align:right;outline:none;color:var(--label)}
+.field input::placeholder{color:var(--label3)}
+.field.stack{flex-direction:column;align-items:stretch;gap:4px}
+.field.stack label{min-width:0;font-size:13px;color:var(--label2)}
+.field.stack input,.field.stack select{text-align:left}
+.type-seg{display:flex;background:var(--fill);border-radius:9px;padding:2px;margin-bottom:14px}
+.type-seg button{flex:1;border:0;background:transparent;padding:7px;border-radius:7px;font-weight:600;font-size:14px;color:var(--label);cursor:pointer}
+.type-seg button.on{background:var(--card);box-shadow:0 2px 6px rgba(0,0,0,.12)}
+
+.note{font-size:13px;color:var(--label2);padding:8px 16px 0;line-height:1.4}
+.toast{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 84px);transform:translateX(-50%);background:var(--card2);color:var(--label);padding:10px 16px;border-radius:12px;box-shadow:0 6px 24px rgba(0,0,0,.2);font-size:15px;display:none;z-index:30;max-width:90vw;text-align:center}
+.toast.show{display:block}
+
+.tx-amount{font-variant-numeric:tabular-nums}
+.del{background:none;border:0;color:var(--red);font-size:20px;padding:0 4px;cursor:pointer}
+.swatch{width:10px;height:10px;border-radius:50%;display:inline-block;margin-right:6px}
+/* ================= Glossy "Liquid Glass" layer ================= */
+:root{
+  --glassbg:rgba(255,255,255,.58);
+  --glassedge:rgba(255,255,255,.75);
+  --glassshadow:0 10px 36px rgba(20,30,70,.10);
+  --glasshi:inset 0 1px 0 rgba(255,255,255,.8);
+  --orb-op:.6;
+}
+:root[data-theme="dark"]{
+  --glassbg:rgba(255,255,255,.08);
+  --glassedge:rgba(255,255,255,.16);
+  --glassshadow:0 12px 40px rgba(0,0,0,.45);
+  --glasshi:inset 0 1px 0 rgba(255,255,255,.12);
+  --orb-op:.22;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --glassbg:rgba(255,255,255,.08);
+    --glassedge:rgba(255,255,255,.16);
+    --glassshadow:0 12px 40px rgba(0,0,0,.45);
+    --glasshi:inset 0 1px 0 rgba(255,255,255,.12);
+    --orb-op:.22;
+  }
+}
+
+body{background:var(--bg);overflow-x:hidden}
+body::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;opacity:var(--orb-op);background:radial-gradient(circle at 15% 12%,#5ac8fa 0,transparent 40%),radial-gradient(circle at 85% 45%,#af52de 0,transparent 40%)}
+body::after{display:none}
+:root[data-theme="light"] body::before{}
+.wrap{position:relative;z-index:0}
+
+/* Shared glass surface */
+.group,.stat-grid,.form-group,#notificationList{
+  background:var(--glassbg);
+  border:1px solid var(--glassedge);
+  border-radius:24px;
+  box-shadow:var(--glassshadow),var(--glasshi);
+  position:relative;
+  overflow:hidden;
+}
+
+.stat-grid .cell+.cell:before{background:var(--sep)}
+.row+.row:before{background:var(--sep);opacity:.6}
+
+/* Hero: glossy gradient with sheen and soft glow */
+.hero{
+  border-radius:28px;
+  background:linear-gradient(135deg,#4aa8ff 0%,#0a7aff 45%,#6a5cff 100%);
+  box-shadow:0 18px 44px rgba(10,122,255,.38),inset 0 1px 0 rgba(255,255,255,.55),inset 0 -1px 0 rgba(0,0,0,.08);
+  border:1px solid rgba(255,255,255,.35);
+  padding:22px 22px 20px;
+}
+
+
+.hero>*{position:relative;z-index:1}
+.hero .balance{text-shadow:0 2px 14px rgba(0,0,60,.25)}
+
+/* Glossy buttons */
+.btn{
+  background:linear-gradient(180deg,#48a6ff 0%,#0a7aff 100%);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.55),inset 0 -1px 0 rgba(0,0,0,.12),0 8px 18px rgba(10,122,255,.32);
+  border-radius:18px;
+  transition:transform .12s ease,filter .12s ease;
+}
+.btn:active{transform:scale(.97);filter:brightness(.95)}
+.btn.plain{
+  background:var(--glassbg);color:var(--blue);
+  border:1px solid var(--glassedge);
+  box-shadow:var(--glasshi),0 4px 12px rgba(0,0,0,.05);
+}
+.btn.small{border-radius:999px}
+.circle-btn{
+  background:var(--glassbg);border:1px solid var(--glassedge);
+  -webkit-backdrop-filter:blur(20px);backdrop-filter:blur(20px);
+  box-shadow:var(--glasshi),0 4px 12px rgba(0,0,0,.06);
+}
+.seg{background:var(--glassbg);border:1px solid var(--glassedge);border-radius:12px}
+.seg button.on,.type-seg button.on{
+  background:linear-gradient(180deg,rgba(255,255,255,.95),rgba(255,255,255,.7));
+  color:#000;box-shadow:inset 0 1px 0 #fff,0 3px 8px rgba(0,0,0,.12);
+}
+:root[data-theme="dark"] .seg button.on,:root[data-theme="dark"] .type-seg button.on{background:linear-gradient(180deg,rgba(120,120,128,.7),rgba(90,90,96,.6));color:#fff}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .seg button.on,:root:not([data-theme="light"]) .type-seg button.on{background:linear-gradient(180deg,rgba(120,120,128,.7),rgba(90,90,96,.6));color:#fff}}
+.type-seg{background:var(--glassbg);border:1px solid var(--glassedge);border-radius:12px}
+
+/* Progress bars: glossy */
+.bar{background:var(--fill);box-shadow:inset 0 1px 2px rgba(0,0,0,.08)}
+.bar i{background:linear-gradient(90deg,#4aa8ff,#0a7aff);box-shadow:inset 0 1px 0 rgba(255,255,255,.5)}
+.bar i.ok{background:linear-gradient(90deg,#5ee08a,#22c55e);box-shadow:inset 0 1px 0 rgba(255,255,255,.5)}
+.bar i.warn{background:linear-gradient(90deg,#ffc266,#ff9500)}
+.bar i.over{background:linear-gradient(90deg,#ff7a70,#ff3b30)}
+.icon{box-shadow:inset 0 1px 0 rgba(255,255,255,.45),0 3px 8px rgba(0,0,0,.12);background-image:linear-gradient(180deg,rgba(255,255,255,.3),rgba(255,255,255,0))}
+
+/* Floating glass tab bar (capsule) */
+nav.tabbar{
+  left:12px;right:12px;bottom:calc(env(safe-area-inset-bottom,0px) + 10px);
+  border-radius:30px;border:1px solid var(--glassedge);
+  background:var(--glassbg);
+  -webkit-backdrop-filter:blur(34px) saturate(200%);backdrop-filter:blur(34px) saturate(200%);
+  box-shadow:0 12px 34px rgba(0,0,0,.14),var(--glasshi);
+  padding:6px;border-top:1px solid var(--glassedge);
+  max-width:720px;margin:0 auto;
+}
+.tabbtn{position:relative;border-radius:22px;z-index:0}
+.tabbtn::before{content:"";position:absolute;inset:0;border-radius:22px;z-index:-1;transition:background .2s ease}
+.tabbtn.active::before{background:linear-gradient(180deg,rgba(255,255,255,.7),rgba(255,255,255,.35));box-shadow:inset 0 1px 0 #fff,0 2px 8px rgba(0,0,0,.08)}
+:root[data-theme="dark"] .tabbtn.active::before{background:linear-gradient(180deg,rgba(255,255,255,.18),rgba(255,255,255,.07));box-shadow:inset 0 1px 0 rgba(255,255,255,.2)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .tabbtn.active::before{background:linear-gradient(180deg,rgba(255,255,255,.18),rgba(255,255,255,.07));box-shadow:inset 0 1px 0 rgba(255,255,255,.2)}}
+.tabbtn.active{color:var(--blue)}
+
+/* Sheets as frosted glass */
+.modal{background:rgba(10,15,30,.28);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
+.sheet{
+  background:rgba(248,248,252,.78);
+  -webkit-backdrop-filter:blur(40px) saturate(190%);backdrop-filter:blur(40px) saturate(190%);
+  border-top:1px solid rgba(255,255,255,.85);
+  border-radius:32px 32px 0 0;
+  box-shadow:0 -10px 40px rgba(0,0,0,.18),inset 0 1px 0 rgba(255,255,255,.9);
+  margin:0 auto;
+}
+:root[data-theme="dark"] .sheet{background:rgba(30,30,34,.72);border-top-color:rgba(255,255,255,.14);box-shadow:0 -10px 40px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.12)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .sheet{background:rgba(30,30,34,.72);border-top-color:rgba(255,255,255,.14);box-shadow:0 -10px 40px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.12)}}
+.sheet .form-group{background:var(--glassbg)}
+.sheet-grab{background:rgba(120,120,128,.45)}
+
+.toast{background:rgba(30,30,34,.82);color:#fff;-webkit-backdrop-filter:blur(20px);backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,.15);box-shadow:0 10px 30px rgba(0,0,0,.25)}
+.badge{box-shadow:0 2px 6px rgba(255,59,48,.45),inset 0 1px 0 rgba(255,255,255,.4)}
+.header h1{background:linear-gradient(180deg,var(--label) 40%,var(--label2));-webkit-background-clip:text;background-clip:text;color:transparent}
+.header h1{background:none;color:var(--label)}
+</style>
+
+</head>
+<body>
+<div class="wrap">
+
+<!-- ============ HOME ============ -->
+<section class="tabpanel active" id="dashboard">
+  <header class="header">
+    <div>
+      <div class="sub" id="monthLabel"></div>
+      <h1>Summary</h1>
+    </div>
+    <div class="hdr-actions">
+      <button class="circle-btn" id="bell" aria-label="Notifications">🔔<span class="badge" id="notificationCount" hidden>0</span></button>
+    </div>
+  </header>
+
+  <div class="hero">
+    <div class="eyebrow">Net balance · this month</div>
+    <div class="balance" id="balance">₹0</div>
+    <div class="hero-foot">
+      <div><span>Income</span><b id="heroIncome">₹0</b></div>
+      <div><span>Expenses</span><b id="heroExpense">₹0</b></div>
+      <div><span>Saved</span><b id="heroSaved">₹0</b></div>
+    </div>
+  </div>
+
+  <div class="stat-grid">
+    <div class="cell"><div class="label">Income</div><strong class="green" id="income">₹0</strong></div>
+    <div class="cell"><div class="label">Expenses</div><strong class="red" id="expense">₹0</strong></div>
+    <div class="cell"><div class="label">Savings rate</div><strong id="rate">0%</strong></div>
+  </div>
+
+  <div class="section-title"><span>Monthly budget</span><button id="setBudgetBtn">Edit</button></div>
+  <div class="group">
+    <div class="row" style="flex-wrap:wrap">
+      <div class="grow">
+        <div class="title" id="budgetNumbers">₹0 / ₹0</div>
+        <div class="bar"><i id="budgetBar"></i></div>
+        <div class="meta" id="budgetHint">Set a budget to track spending.</div>
+      </div>
+      <div class="val" id="budgetPercent">0%</div>
+    </div>
+    <div class="row"><div class="grow title">Remaining</div><div class="val" id="budgetRemain">₹0</div></div>
+  </div>
+
+  <div class="btn-row">
+    <button class="btn" onclick="openTransaction('expense')">Add expense</button>
+    <button class="btn plain" onclick="openTransaction('income')">Add income</button>
+  </div>
+
+  <div class="section-title"><span>Savings goals</span><button id="addGoalBtn">Add</button></div>
+  <div class="group" id="goalPreview"><div class="empty">No goals yet. Create your first savings goal.</div></div>
+
+  <div class="section-title"><span>Friends</span></div>
+  <div class="group" id="homeLoans"></div>
+
+  <div class="section-title"><span>Recent</span></div>
+  <div class="group" id="recentList"><div class="empty">No transactions yet.</div></div>
+</section>
+
+<!-- ============ TRANSACTIONS ============ -->
+<section class="tabpanel" id="transactions">
+  <header class="header"><div><h1>Transactions</h1></div>
+    <div class="hdr-actions"><button class="circle-btn" onclick="openTransaction('expense')" aria-label="Add">＋</button></div>
+  </header>
+  <div class="group" id="allTransactions"><div class="empty">Your transaction history will appear here.</div></div>
+</section>
+
+<!-- ============ GOALS ============ -->
+<section class="tabpanel" id="goalsPanel">
+  <header class="header"><div><h1>Goals</h1></div>
+    <div class="hdr-actions"><button class="circle-btn" id="addGoalBtn2" aria-label="Add goal">＋</button></div>
+  </header>
+  <div class="section-title"><span>Savings</span></div>
+  <div class="group" id="allGoals"><div class="empty">No goals yet.</div></div>
+
+  <div class="section-title"><span>Category budgets</span></div>
+  <div class="group">
+    <form id="categoryBudgetForm" style="margin:0">
+      <div class="field"><label>Category</label>
+        <select id="budgetCategory"><option>Food</option><option>Travel</option><option>Shopping</option><option>Bills</option><option>Health</option><option>Education</option><option>Entertainment</option><option>Other</option></select>
+      </div>
+      <div class="field"><label>Limit (₹)</label><input id="categoryLimit" type="number" min="1" required placeholder="e.g. 3000"></div>
+      <div style="padding:10px 16px"><button class="btn" type="submit">Save category budget</button></div>
+    </form>
+  </div>
+  <div class="group" id="categoryBudgetList"></div>
+</section>
+
+<!-- ============ LOANS ============ -->
+<section class="tabpanel" id="loansPanel">
+  <header class="header"><div><h1>Friends</h1></div>
+    <div class="hdr-actions"><button class="circle-btn" id="addLoanBtn" aria-label="Add loan">＋</button></div>
+  </header>
+  <div class="stat-grid">
+    <div class="cell"><div class="label">Friends owe you</div><strong class="green" id="loanOwedToMe">₹0</strong></div>
+    <div class="cell"><div class="label">You owe friends</div><strong class="red" id="loanIOwe">₹0</strong></div>
+    <div class="cell"><div class="label">Overall</div><strong id="loanNet">₹0</strong></div>
+  </div>
+  <div class="section-title"><span>By friend</span></div>
+  <div class="group" id="loanPeople"><div class="empty">No friends yet.</div></div>
+  <div class="section-title"><span>Details</span></div>
+  <div class="group" id="loanList"><div class="empty">No entries yet.</div></div>
+  <div class="note">Tap “Paid back” when a friend returns money, so the totals stay correct.</div>
+</section>
+
+<!-- ============ REPORTS ============ -->
+<section class="tabpanel" id="reports">
+  <header class="header"><div><h1>Reports</h1></div></header>
+  <div class="stat-grid">
+    <div class="cell"><div class="label">Income</div><strong class="green" id="reportIncome">₹0</strong></div>
+    <div class="cell"><div class="label">Expenses</div><strong class="red" id="reportExpense">₹0</strong></div>
+    <div class="cell"><div class="label">Net</div><strong id="reportSavings">₹0</strong></div>
+  </div>
+  <div class="section-title"><span>Spending by category</span></div>
+  <div class="group" id="categoryReport"><div class="empty">No spending recorded.</div></div>
+  <div class="note">Net here means recorded income minus recorded expenses for the selected month. It is not a bank balance.</div>
+</section>
+
+<!-- ============ SETTINGS ============ -->
+<section class="tabpanel" id="settings">
+  <header class="header"><div><h1>Settings</h1></div></header>
+
+  <div class="section-title"><span>Appearance</span></div>
+  <div class="group" style="padding:12px 16px">
+    <div class="seg" role="tablist" aria-label="Theme">
+      <button data-theme-choice="system" class="on">System</button>
+      <button data-theme-choice="light">Light</button>
+      <button data-theme-choice="dark">Dark</button>
+    </div>
+  </div>
+
+  <div class="section-title"><span>Backup</span></div>
+  <div class="group">
+    <div class="row"><div class="grow"><div class="title">Export backup</div><div class="meta">Save a JSON copy of your data</div></div><button class="btn small" id="exportBtn">Export</button></div>
+    <div class="row"><div class="grow"><div class="title">Restore backup</div><div class="meta">Replaces data stored in this browser</div></div><button class="btn small plain" id="importBtn">Restore</button></div>
+    <input id="restoreFile" type="file" accept="application/json,.json" hidden>
+  </div>
+  <div class="note">Records are stored locally in this browser. Clearing site data or changing devices can remove them unless you export a backup first.</div>
+
+  <div class="section-title" style="margin-top:22px"><span>Notifications</span></div>
+  <div class="group">
+    <div class="row"><div class="grow"><div class="title">System notifications</div><div class="meta" id="permissionStatus">Not requested</div></div><button class="btn small" id="enableBrowserNotifications">Enable</button></div>
+    <div id="fcmTokenArea" hidden style="padding:12px 16px">
+      <div class="meta" style="margin-bottom:6px">Device token (keep private)</div>
+      <textarea id="fcmTokenBox" readonly rows="3" style="width:100%;padding:10px;border:0;border-radius:10px;background:var(--card2);color:var(--label);font:11px ui-monospace,monospace;overflow-wrap:anywhere"></textarea>
+      <button class="btn small plain" id="copyFcmToken" style="margin-top:8px">Copy token</button>
+    </div>
+  </div>
+  <div class="note">Scheduled notifications while the app is fully closed need a native app or a properly configured installable web app.</div>
+</section>
+
+</div>
+
+<!-- Tab bar -->
+<nav class="tabbar">
+  <button class="tabbtn active" data-tab="dashboard"><span class="gl">◉</span>Summary</button>
+  <button class="tabbtn" data-tab="transactions"><span class="gl">≡</span>Transactions</button>
+  <button class="tabbtn" data-tab="goalsPanel"><span class="gl">◎</span>Goals</button>
+  <button class="tabbtn" data-tab="loansPanel"><span class="gl">👥</span>Friends</button>
+  <button class="tabbtn" data-tab="reports"><span class="gl">▤</span>Reports</button>
+  <button class="tabbtn" data-tab="settings"><span class="gl">⚙</span>Settings</button>
+</nav>
+
+<!-- Transaction sheet -->
+<div class="modal" id="transactionModal"><div class="sheet">
+  <div class="sheet-grab"></div>
+  <div class="sheet-head"><button data-close="transactionModal">Cancel</button><h2 id="transactionTitle">Add expense</h2><button class="r" form="transactionForm" type="submit">Save</button></div>
+  <form id="transactionForm">
+    <div class="type-seg">
+      <button type="button" data-txtype="expense" class="on">Expense</button>
+      <button type="button" data-txtype="income">Income</button>
+    </div>
+    <input type="hidden" id="txType" value="expense">
+    <div class="form-group">
+      <div class="field"><label>Amount</label><input id="txAmount" type="number" min="0.01" step="0.01" required placeholder="₹0.00"></div>
+      <div class="field"><label>Category</label>
+        <select id="txCategory"><option>Food</option><option>Travel</option><option>Shopping</option><option>Bills</option><option>Health</option><option>Education</option><option>Entertainment</option><option>Salary</option><option>Freelance</option><option>Other</option></select>
+      </div>
+      <div class="field"><label>Date</label><input id="txDate" type="date" required></div>
+      <div class="field"><label>Note</label><input id="txNote" maxlength="100" placeholder="Optional"></div>
+    </div>
+  </form>
+</div></div>
+
+<!-- Goal sheet -->
+<div class="modal" id="goalModal"><div class="sheet">
+  <div class="sheet-grab"></div>
+  <div class="sheet-head"><button data-close="goalModal">Cancel</button><h2>New goal</h2><button class="r" form="goalForm" type="submit">Create</button></div>
+  <form id="goalForm">
+    <div class="form-group">
+      <div class="field"><label>Name</label><input id="goalName" required maxlength="50" placeholder="e.g. New phone"></div>
+      <div class="field"><label>Target (₹)</label><input id="goalTarget" type="number" min="1" required></div>
+      <div class="field"><label>Saved (₹)</label><input id="goalSaved" type="number" min="0" value="0"></div>
+      <div class="field"><label>Target date</label><input id="goalDate" type="date"></div>
+    </div>
+  </form>
+</div></div>
+
+<!-- Budget sheet -->
+<div class="modal" id="budgetModal"><div class="sheet">
+  <div class="sheet-grab"></div>
+  <div class="sheet-head"><button data-close="budgetModal">Cancel</button><h2>Monthly budget</h2><button class="r" form="budgetForm" type="submit">Save</button></div>
+  <form id="budgetForm">
+    <div class="form-group">
+      <div class="field"><label>Budget (₹)</label><input id="monthlyBudgetInput" type="number" min="1" required placeholder="e.g. 20000"></div>
+    </div>
+  </form>
+</div></div>
+
+<!-- Notifications sheet -->
+<div class="modal" id="notificationModal"><div class="sheet">
+  <div class="sheet-grab"></div>
+  <div class="sheet-head"><button id="clearNotifications">Clear</button><h2>Notifications</h2><button class="r" data-close="notificationModal">Done</button></div>
+  <div class="group" id="notificationList"><div class="empty">You're all caught up.</div></div>
+</div></div>
+
+<!-- Loan sheet -->
+<div class="modal" id="loanModal"><div class="sheet">
+  <div class="sheet-grab"></div>
+  <div class="sheet-head"><button data-close="loanModal">Cancel</button><h2>New entry</h2><button class="r" form="loanForm" type="submit">Save</button></div>
+  <form id="loanForm">
+    <div class="type-seg">
+      <button type="button" data-loantype="lent" class="on">I gave</button>
+      <button type="button" data-loantype="borrowed">I borrowed</button>
+    </div>
+    <div class="form-group">
+      <div class="field"><label>Friend</label><input id="loanPerson" required maxlength="40" placeholder="Friend's name"></div>
+      <div class="field"><label>Amount</label><input id="loanAmount" type="number" min="0.01" step="0.01" required placeholder="₹0.00"></div>
+      <div class="field"><label>Date</label><input id="loanDate" type="date" required></div>
+      <div class="field"><label>Note</label><input id="loanNote" maxlength="100" placeholder="Optional"></div>
+    </div>
+  </form>
+</div></div>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-messaging-compat.js"></script>
+<script>
+'use strict';
+const STORAGE_KEY='myFinance_v1';
+const THEME_KEY='myFinance_theme';
+const FIREBASE_CONFIG = {"apiKey":"AIzaSyBGFiYS89iQzDdZfqo6B-3D6pSoemqDBnc","authDomain":"myfinance-adaf1.firebaseapp.com","projectId":"myfinance-adaf1","storageBucket":"myfinance-adaf1.firebasestorage.app","messagingSenderId":"462114551555","appId":"1:462114551555:web:21e0d9a3eb42ec6e0adb36","measurementId":"G-L2674Y7E6N"};
+const FCM_VAPID_KEY = 'BKGsG38WOIYr8xvTO2z6DsBxvphYPI8eRofkFXCRmyIp1cPSmDcKBBFnJ_0FfpUqenu0ZLfCsefjVVNaEVrcyqs';
+let firebaseMessaging = null;
+
+const $=id=>document.getElementById(id);
+const today=()=>new Date().toISOString().slice(0,10);
+const monthKey=()=>today().slice(0,7);
+const money=n=>new Intl.NumberFormat('en-IN',{style:'currency',currency:'INR',maximumFractionDigits:2}).format(Number(n)||0);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const ICON_COLORS={Food:'#ff9500',Travel:'#5ac8fa',Shopping:'#af52de',Bills:'#ff3b30',Health:'#ff2d55',Education:'#5856d6',Entertainment:'#ffcc00',Salary:'#34c759',Freelance:'#30b0c7',Other:'#8e8e93'};
+const ICON_GLYPH={Food:'🍽',Travel:'✈',Shopping:'🛍',Bills:'🧾',Health:'♥',Education:'🎓',Entertainment:'🎬',Salary:'₹',Freelance:'💼',Other:'•'};
+
+let data={entries:[],goals:[],loans:[],budget:0,categoryBudgets:{},notifications:[],lastDailySummary:''};
+
+/* ---------- Theme ---------- */
+function applyTheme(choice){
+  const root=document.documentElement;
+  if(choice==='system'){root.removeAttribute('data-theme');}
+  else root.setAttribute('data-theme',choice);
+  const dark = choice==='dark' || (choice==='system' && matchMedia('(prefers-color-scheme: dark)').matches);
+  $('themeMeta').setAttribute('content', dark?'#000000':'#f2f2f7');
+  document.querySelectorAll('[data-theme-choice]').forEach(b=>b.classList.toggle('on',b.dataset.themeChoice===choice));
+  try{localStorage.setItem(THEME_KEY,choice);}catch(e){}
+}
+
+/* ---------- Data ---------- */
+function loadData(){
+ try{
+  const raw=localStorage.getItem(STORAGE_KEY);
+  if(raw){const old=JSON.parse(raw);if(old&&typeof old==='object')data={...data,...old};}
+ }catch(e){console.warn('Saved data could not be read',e);}
+ if(!Array.isArray(data.entries))data.entries=[];
+ if(!Array.isArray(data.goals))data.goals=[];
+ if(!data.categoryBudgets||typeof data.categoryBudgets!=='object')data.categoryBudgets={};
+ if(!Array.isArray(data.notifications))data.notifications=[];
+ if(!Array.isArray(data.loans))data.loans=[];
+ data.entries=data.entries.map(x=>({...x,type:x.type||(x.kind==='income'?'income':'expense'),note:x.note??x.description??''}));
+}
+function saveData(){try{localStorage.setItem(STORAGE_KEY,JSON.stringify(data));}catch(e){showToast('Could not save. Export a backup and check storage.');}}
+function showToast(msg){$('toast').textContent=msg;$('toast').classList.add('show');clearTimeout(showToast._t);showToast._t=setTimeout(()=>$('toast').classList.remove('show'),2200);}
+function monthEntries(){return data.entries.filter(x=>String(x.date||'').slice(0,7)===monthKey());}
+function totals(items){return items.reduce((a,x)=>{a[x.type]=(a[x.type]||0)+Number(x.amount||0);return a;},{income:0,expense:0});}
+function addNotification(title,message,key){
+ if(data.notifications.some(n=>n.key===key))return;
+ data.notifications.unshift({id:Date.now()+Math.random(),key,title,message,createdAt:new Date().toISOString(),read:false});
+ data.notifications=data.notifications.slice(0,80);
+ saveData();
+}
+function evaluateBudgetAlerts(){
+ const items=monthEntries(),spent=totals(items).expense;
+ if(Number(data.budget)>0){
+  [75,90,100].forEach(p=>{if(spent>=Number(data.budget)*p/100)addNotification('Monthly budget alert',`You have used ${p}% of your monthly budget (${money(spent)} spent).`,`${monthKey()}-total-${p}`);});
+ }
+ Object.entries(data.categoryBudgets).forEach(([cat,limit])=>{
+  const value=items.filter(x=>x.type==='expense'&&x.category===cat).reduce((s,x)=>s+Number(x.amount||0),0);
+  [75,90,100].forEach(p=>{if(Number(limit)>0&&value>=Number(limit)*p/100)addNotification(`${cat} budget alert`,`${cat} spending has reached ${p}% of its monthly limit.`,`${monthKey()}-${cat}-${p}`);});
+ });
+}
+function maybeDailySummary(){
+ const key=today();if(data.lastDailySummary===key)return;
+ const todays=data.entries.filter(x=>x.date===key),s=totals(todays);
+ if(todays.length){addNotification('Daily money summary',`Today: ${money(s.expense)} spent and ${money(s.income)} received across ${todays.length} entries.`,`${key}-daily-summary`);}
+ data.lastDailySummary=key;saveData();
+}
+function barClass(p){return p>=100?'over':p>=90?'warn':'ok';}
+
+/* ---------- Renderers ---------- */
+function renderTransaction(x){
+ const isIn=x.type==='income';
+ const cat=x.category||'Other';
+ const color=ICON_COLORS[cat]||'#8e8e93';
+ const glyph=ICON_GLYPH[cat]||'•';
+ return `<div class="row">
+   <div class="icon" style="background:${color}">${glyph}</div>
+   <div class="grow"><div class="title">${esc(cat)}${x.note?' · '+esc(x.note):''}</div><div class="meta">${esc(x.date||'')}</div></div>
+   <div class="val ${isIn?'green':''}">${isIn?'+':'−'}${money(x.amount)}</div>
+   <button class="del" onclick="deleteEntry('${esc(x.id)}')" aria-label="Delete">×</button>
+ </div>`;
+}
+function renderGoals(){
+ const markup=data.goals.map((g,i)=>{
+   const target=Number(g.target)||0,saved=Number(g.current??g.saved)||0,p=target?Math.min(100,saved/target*100):0;
+   return `<div class="row" style="flex-wrap:wrap">
+     <div class="grow">
+       <div class="title">${esc(g.name)}</div>
+       <div class="bar"><i class="${p>=100?'ok':''}" style="width:${p}%"></i></div>
+       <div class="meta">${money(saved)} of ${money(target)} · ${Math.round(p)}%</div>
+     </div>
+     <button class="btn small plain" onclick="addGoalSavings(${i})">Add</button>
+   </div>`;
+ }).join('');
+ $('goalPreview').innerHTML=markup||'<div class="empty">No goals yet. Create your first savings goal.</div>';
+ $('allGoals').innerHTML=markup||'<div class="empty">No goals yet.</div>';
+}
+function render(){
+ evaluateBudgetAlerts();
+ const items=monthEntries(),s=totals(items),net=s.income-s.expense;
+ $('monthLabel').textContent=new Date().toLocaleDateString('en-IN',{month:'long',year:'numeric'});
+ $('balance').textContent=money(net);
+ $('heroIncome').textContent=money(s.income);$('heroExpense').textContent=money(s.expense);$('heroSaved').textContent=money(Math.max(0,net));
+ $('income').textContent=money(s.income);$('expense').textContent=money(s.expense);
+ $('rate').textContent=s.income?Math.round(net/s.income*100)+'%':'0%';
+
+ $('budgetNumbers').textContent=`${money(s.expense)} of ${money(data.budget)}`;
+ const rawPct=data.budget?s.expense/data.budget*100:0;
+ const pct=Math.min(100,rawPct);
+ $('budgetBar').style.width=pct+'%';
+ $('budgetBar').className=barClass(rawPct);
+ $('budgetPercent').textContent=Math.round(rawPct)+'%';
+ $('budgetRemain').textContent=money(Math.max(0,Number(data.budget)-s.expense));
+ $('budgetHint').textContent=!data.budget?'Set a budget to track spending.':rawPct>=100?'Budget limit reached.':rawPct>=90?'Close to your limit.':'Usage this month.';
+
+ const sorted=[...data.entries].sort((a,b)=>String(b.date).localeCompare(String(a.date)));
+ $('recentList').innerHTML=sorted.slice(0,7).map(renderTransaction).join('')||'<div class="empty">No transactions yet. Add your first income or expense.</div>';
+ $('allTransactions').innerHTML=sorted.map(renderTransaction).join('')||'<div class="empty">Your transaction history will appear here.</div>';
+ renderGoals();
+
+ const cats={};items.filter(x=>x.type==='expense').forEach(x=>cats[x.category||'Other']=(cats[x.category||'Other']||0)+Number(x.amount||0));
+ $('categoryBudgetList').innerHTML=Object.entries(data.categoryBudgets).map(([cat,limit])=>{
+   const used=cats[cat]||0,p=Number(limit)?used/limit*100:0;
+   return `<div class="row" style="flex-wrap:wrap">
+     <div class="grow"><div class="title">${esc(cat)}</div><div class="bar"><i class="${barClass(p)}" style="width:${Math.min(100,p)}%"></i></div><div class="meta">${money(used)} of ${money(limit)}</div></div>
+   </div>`;
+ }).join('')||'<div class="empty">No category budgets yet.</div>';
+
+ $('reportIncome').textContent=money(s.income);$('reportExpense').textContent=money(s.expense);$('reportSavings').textContent=money(net);
+ $('categoryReport').innerHTML=Object.entries(cats).sort((a,b)=>b[1]-a[1]).map(([cat,value])=>`<div class="row">
+   <div class="icon" style="background:${ICON_COLORS[cat]||'#8e8e93'}">${ICON_GLYPH[cat]||'•'}</div>
+   <div class="grow"><div class="title">${esc(cat)}</div><div class="bar"><i style="width:${s.expense?value/s.expense*100:0}%"></i></div></div>
+   <div class="val">${money(value)}</div></div>`).join('')||'<div class="empty">No spending recorded this month.</div>';
+
+ renderLoans();
+ const unread=data.notifications.filter(n=>!n.read).length;
+ $('notificationCount').textContent=unread;$('notificationCount').hidden=!unread;
+}
+
+/* ---------- Actions ---------- */
+let currentTxType='expense';
+function setTxType(t){
+  currentTxType=t;$('txType').value=t;
+  document.querySelectorAll('[data-txtype]').forEach(b=>b.classList.toggle('on',b.dataset.txtype===t));
+  $('transactionTitle').textContent=t==='income'?'Add income':'Add expense';
+  $('txCategory').value=t==='income'?'Salary':'Food';
+}
+function openTransaction(type){
+  setTxType(type);$('txDate').value=today();$('txAmount').value='';$('txNote').value='';
+  $('transactionModal').classList.add('show');
+}
+function closeModal(id){$(id).classList.remove('show');}
+function deleteEntry(id){if(!confirm('Delete this transaction?'))return;data.entries=data.entries.filter(x=>String(x.id)!==String(id));saveData();render();showToast('Transaction deleted');}
+function addGoalSavings(i){const amount=Number(prompt('How much did you save towards this goal?','0'));if(amount>0){data.goals[i].current=Number(data.goals[i].current??data.goals[i].saved??0)+amount;saveData();render();showToast('Savings goal updated');}}
+function openNotifications(){
+  data.notifications.forEach(n=>n.read=true);saveData();render();
+  $('notificationList').innerHTML=data.notifications.map(n=>`<div class="row" style="flex-wrap:wrap"><div class="grow"><div class="title">${esc(n.title)}</div><div class="meta" style="white-space:normal">${esc(n.message)}</div><div class="meta">${new Date(n.createdAt).toLocaleString()}</div></div></div>`).join('')||'<div class="empty">You are all caught up.</div>';
+  $('notificationModal').classList.add('show');
+}
+function exportBackup(){const payload={...data,exportedAt:new Date().toISOString(),app:'My Finance'};const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='my-finance-backup-'+today()+'.json';a.click();URL.revokeObjectURL(url);showToast('Backup exported');}
+
+async function requestBrowserNotifications(){
+ try{
+  if(!('Notification' in window)){showToast('Notifications are not supported here.');return;}
+  if(!('serviceWorker' in navigator)){showToast('Service workers are not supported here.');return;}
+  if(!window.firebase || !firebase.messaging){showToast('Firebase did not load. Check your connection.');return;}
+  const permission=await Notification.requestPermission();
+  $('permissionStatus').textContent='Permission: '+permission;
+  if(permission!=='granted'){showToast('Allow notifications to continue.');return;}
+  if(!firebase.apps.length)firebase.initializeApp(FIREBASE_CONFIG);
+  firebaseMessaging=firebase.messaging();
+  const registration=await navigator.serviceWorker.register('./service-worker.js');
+  await navigator.serviceWorker.ready;
+  const token=await firebaseMessaging.getToken({vapidKey:FCM_VAPID_KEY,serviceWorkerRegistration:registration});
+  if(!token){$('permissionStatus').textContent='Granted, but no token was created.';showToast('Could not create notification token.');return;}
+  localStorage.setItem('myFinance_fcmToken',token);
+  $('fcmTokenBox').value=token;$('fcmTokenArea').hidden=false;
+  $('permissionStatus').textContent='Enabled';
+  showToast('System notifications enabled');
+  firebaseMessaging.onMessage(payload=>{
+   const title=payload.notification?.title||'My Finance';
+   const body=payload.notification?.body||'You have a new update.';
+   if('serviceWorker' in navigator){
+    navigator.serviceWorker.ready.then(reg=>reg.showNotification(title,{body,icon:'./icons/icon-192.png',badge:'./icons/icon-192.png',data:payload.data||{}}));
+   }
+   addNotification(title,body,'fcm-'+Date.now());
+   render();
+  });
+ }catch(err){
+  console.error('FCM setup failed:',err);
+  $('permissionStatus').textContent='Setup failed: '+(err.message||String(err));
+  showToast('Notification setup failed.');
+ }
+}
+
+/* ---------- Friends (money given to / borrowed from friends) ---------- */
+let loanType='lent';
+function setLoanType(t){
+  loanType=t;
+  document.querySelectorAll('[data-loantype]').forEach(b=>b.classList.toggle('on',b.dataset.loantype===t));
+}
+function openLoan(){
+  setLoanType('lent');$('loanPerson').value='';$('loanAmount').value='';$('loanDate').value=today();$('loanNote').value='';
+  $('loanModal').classList.add('show');
+}
+function outstanding(l){
+  return Math.max(0,Number(l.amount)-(l.repayments||[]).reduce((s,r)=>s+Number(r.amount||0),0));
+}
+function addRepayment(id){
+  const l=data.loans.find(x=>String(x.id)===String(id));if(!l)return;
+  const due=outstanding(l);
+  const amt=Number(prompt(l.type==='lent'?`How much did ${l.person} pay back? (₹${due} still pending)`:`How much did you pay ${l.person} back? (₹${due} still pending)`,String(due)));
+  if(!(amt>0))return;
+  l.repayments=l.repayments||[];
+  l.repayments.push({id:String(Date.now()),amount:Math.min(amt,due),date:today()});
+  saveData();render();showToast('Repayment recorded');
+}
+function deleteLoan(id){
+  if(!confirm('Delete this loan?'))return;
+  data.loans=data.loans.filter(x=>String(x.id)!==String(id));
+  saveData();render();showToast('Loan deleted');
+}
+function renderLoans(){
+  let owedToMe=0,iOwe=0;const people={};
+  data.loans.forEach(l=>{
+    const o=outstanding(l),k=(l.person||'Unknown').trim()||'Unknown';
+    people[k]=people[k]||{lent:0,borrowed:0};
+    if(l.type==='lent'){owedToMe+=o;people[k].lent+=o;}else{iOwe+=o;people[k].borrowed+=o;}
+  });
+  $('loanOwedToMe').textContent=money(owedToMe);
+  $('loanIOwe').textContent=money(iOwe);
+  $('loanNet').textContent=money(owedToMe-iOwe);
+  $('loanPeople').innerHTML=Object.entries(people)
+    .sort((a,b)=>(b[1].lent+b[1].borrowed)-(a[1].lent+a[1].borrowed))
+    .map(([name,v])=>{
+      const net=v.lent-v.borrowed;
+      const txt=net>0?`${money(net)} to receive`:net<0?`${money(-net)} to pay back`:'All square';
+      const cls=net>0?'green':net<0?'red':'';
+      return `<div class="row"><div class="grow"><div class="title">${esc(name)}</div><div class="meta">You gave ${money(v.lent)} · You borrowed ${money(v.borrowed)}</div></div><div class="val ${cls}">${txt}</div></div>`;
+    }).join('')||'<div class="empty">No friends yet. Tap + to record money you gave or borrowed.</div>';
+  const list=[...data.loans].sort((a,b)=>String(b.date).localeCompare(String(a.date)));
+  $('loanList').innerHTML=list.map(l=>{
+    const o=outstanding(l),isLent=l.type==='lent',settled=o===0;
+    return `<div class="row">
+      <div class="icon" style="background:${isLent?'#34c759':'#ff9500'}">${isLent?'↗':'↙'}</div>
+      <div class="grow"><div class="title">${esc(l.person)}${l.note?' · '+esc(l.note):''}</div>
+        <div class="meta">${esc(l.date||'')} · ${isLent?'Gave':'Borrowed'} ${money(l.amount)}${settled?' · All square':' · Still pending '+money(o)}</div></div>
+      ${settled?'':`<button class="btn small plain" onclick="addRepayment('${esc(l.id)}')">Paid back</button>`}
+      <button class="del" onclick="deleteLoan('${esc(l.id)}')" aria-label="Delete">×</button>
+    </div>`;
+  }).join('')||'<div class="empty">No entries yet.</div>';
+  $('homeLoans').innerHTML=`<div class="row"><div class="grow title">Friends owe you</div><div class="val green">${money(owedToMe)}</div></div><div class="row"><div class="grow title">You owe friends</div><div class="val red">${money(iOwe)}</div></div>`;
+}
+
+/* ---------- Wiring ---------- */
+$('addLoanBtn').onclick=openLoan;
+document.querySelectorAll('[data-loantype]').forEach(b=>b.addEventListener('click',()=>setLoanType(b.dataset.loantype)));
+$('loanForm').onsubmit=e=>{
+  e.preventDefault();
+  const amount=Number($('loanAmount').value);if(!(amount>0))return;
+  data.loans.push({id:crypto.randomUUID?crypto.randomUUID():String(Date.now()),type:loanType,person:$('loanPerson').value.trim(),amount,date:$('loanDate').value,note:$('loanNote').value.trim(),repayments:[]});
+  saveData();closeModal('loanModal');render();showToast('Loan saved');
+};
+document.querySelectorAll('[data-tab]').forEach(b=>b.addEventListener('click',()=>{
+  document.querySelectorAll('.tabbtn').forEach(x=>x.classList.toggle('active',x===b));
+  document.querySelectorAll('.tabpanel').forEach(x=>x.classList.toggle('active',x.id===b.dataset.tab));
+  window.scrollTo({top:0,behavior:'instant'});
+}));
+document.querySelectorAll('[data-theme-choice]').forEach(b=>b.addEventListener('click',()=>applyTheme(b.dataset.themeChoice)));
+document.querySelectorAll('[data-txtype]').forEach(b=>b.addEventListener('click',()=>setTxType(b.dataset.txtype)));
+
+$('setBudgetBtn').onclick=()=>{$('monthlyBudgetInput').value=data.budget||'';$('budgetModal').classList.add('show');};
+$('addGoalBtn').onclick=$('addGoalBtn2').onclick=()=>$('goalModal').classList.add('show');
+$('bell').onclick=openNotifications;
+
+$('transactionForm').onsubmit=e=>{
+  e.preventDefault();
+  const amount=Number($('txAmount').value);if(!(amount>0))return;
+  data.entries.push({id:crypto.randomUUID?crypto.randomUUID():String(Date.now()),type:$('txType').value,amount,category:$('txCategory').value,date:$('txDate').value,note:$('txNote').value.trim()});
+  saveData();closeModal('transactionModal');render();showToast('Entry saved');
+};
+$('goalForm').onsubmit=e=>{e.preventDefault();data.goals.push({name:$('goalName').value.trim(),target:Number($('goalTarget').value),current:Number($('goalSaved').value)||0,date:$('goalDate').value});saveData();e.target.reset();closeModal('goalModal');render();showToast('Goal added');};
+$('budgetForm').onsubmit=e=>{e.preventDefault();data.budget=Number($('monthlyBudgetInput').value);saveData();closeModal('budgetModal');render();showToast('Budget saved');};
+$('categoryBudgetForm').onsubmit=e=>{e.preventDefault();data.categoryBudgets[$('budgetCategory').value]=Number($('categoryLimit').value);saveData();e.target.reset();render();showToast('Category budget saved');};
+
+$('exportBtn').onclick=exportBackup;
+$('importBtn').onclick=()=>$('restoreFile').click();
+$('restoreFile').onchange=async e=>{
+  const f=e.target.files[0];if(!f)return;
+  try{
+    const v=JSON.parse(await f.text());
+    const entries=Array.isArray(v.entries)?v.entries:Array.isArray(v.transactions)?v.transactions:null;
+    if(!entries||!Array.isArray(v.goals))throw Error('Invalid backup');
+    if(!confirm('Restore this backup? Current data will be replaced.'))return;
+    data={...data,...v,entries:entries.map(x=>({...x,type:x.type||(x.kind==='income'?'income':'expense'),note:x.note??x.description??''})),goals:v.goals,categoryBudgets:v.categoryBudgets||{},notifications:v.notifications||[]};
+    saveData();render();showToast('Backup restored');
+  }catch(err){alert('This does not look like a valid My Finance backup.');}
+  e.target.value='';
+};
+$('clearNotifications').onclick=()=>{data.notifications=[];saveData();render();$('notificationList').innerHTML='<div class="empty">Notifications cleared.</div>';};
+$('enableBrowserNotifications').onclick=requestBrowserNotifications;
+$('copyFcmToken').onclick=async()=>{const token=$('fcmTokenBox').value;if(token){try{await navigator.clipboard.writeText(token);showToast('Token copied');}catch(e){showToast('Select and copy the token manually.');}}};
+document.querySelectorAll('[data-close]').forEach(b=>b.onclick=()=>closeModal(b.dataset.close));
+document.querySelectorAll('.modal').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)closeModal(m.id);}));
+matchMedia('(prefers-color-scheme: dark)').addEventListener?.('change',()=>{if(!document.documentElement.hasAttribute('data-theme')||localStorage.getItem(THEME_KEY)==='system')applyTheme('system');});
+
+/* ---------- Boot ---------- */
+loadData();
+applyTheme(localStorage.getItem(THEME_KEY)||'system');
+const savedFcmToken=localStorage.getItem('myFinance_fcmToken');
+if(savedFcmToken){$('fcmTokenBox').value=savedFcmToken;$('fcmTokenArea').hidden=false;$('permissionStatus').textContent='Enabled on this device';}
+maybeDailySummary();render();
+</script>
+
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./service-worker.js').catch(err => console.warn('Service worker registration failed:', err));
+  });
+}
+</script>
+</body>
+</html>
