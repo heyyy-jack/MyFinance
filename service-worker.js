@@ -1,23 +1,6 @@
-/* Firebase Cloud Messaging background notifications */
-importScripts('https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js');
-importScripts('https://www.gstatic.com/firebasejs/10.14.1/firebase-messaging-compat.js');
-
-firebase.initializeApp({"apiKey":"AIzaSyBGFiYS89iQzDdZfqo6B-3D6pSoemqDBnc","authDomain":"myfinance-adaf1.firebaseapp.com","projectId":"myfinance-adaf1","storageBucket":"myfinance-adaf1.firebasestorage.app","messagingSenderId":"462114551555","appId":"1:462114551555:web:21e0d9a3eb42ec6e0adb36","measurementId":"G-L2674Y7E6N"});
-const messaging = firebase.messaging();
-
-messaging.onBackgroundMessage(payload => {
-  const title = (payload.notification && payload.notification.title) || 'My Finance';
-  const options = {
-    body: (payload.notification && payload.notification.body) || 'You have a new update.',
-    icon: './icons/icon-192.png',
-    badge: './icons/icon-192.png',
-    data: payload.data || {}
-  };
-  self.registration.showNotification(title, options);
-});
-
-/* Existing offline app-shell caching, with a new cache version to refresh deployment. */
-const CACHE_NAME = 'my-finance-pwa-fcm-v2';
+/* My Finance — offline support only (Firebase/FCM removed).
+   Bump CACHE_NAME when the static assets (icons/manifest) change. */
+const CACHE_NAME = 'my-finance-pwa-v3';
 const APP_SHELL = [
   './',
   './index.html',
@@ -28,39 +11,49 @@ const APP_SHELL = [
 ];
 
 self.addEventListener('install', event => {
-  event.waitUntil(caches.open(CACHE_NAME).then(cache => cache.addAll(APP_SHELL)));
+  event.waitUntil((async () => {
+    const cache = await caches.open(CACHE_NAME);
+    // Cache each asset separately so one missing file cannot block installation.
+    await Promise.all(APP_SHELL.map(url => cache.add(url).catch(() => null)));
+  })());
   self.skipWaiting();
 });
 
 self.addEventListener('activate', event => {
-  event.waitUntil(
-    caches.keys().then(keys =>
-      Promise.all(keys.filter(key => key !== CACHE_NAME).map(key => caches.delete(key)))
-    )
-  );
-  self.clients.claim();
+  event.waitUntil((async () => {
+    const keys = await caches.keys();
+    await Promise.all(keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k)));
+    await self.clients.claim();
+  })());
 });
 
 self.addEventListener('fetch', event => {
-  const request = event.request;
-  if (request.method !== 'GET' || new URL(request.url).origin !== self.location.origin) return;
-  event.respondWith(
-    caches.match(request).then(cached => cached || fetch(request).then(response => {
-      if (response && response.status === 200) {
-        const copy = response.clone();
-        caches.open(CACHE_NAME).then(cache => cache.put(request, copy));
-      }
-      return response;
-    }).catch(() => caches.match('./index.html')))
-  );
+  const req = event.request;
+  if (req.method !== 'GET' || new URL(req.url).origin !== self.location.origin) return;
+  const isPage = req.mode === 'navigate' || req.destination === 'document';
+  event.respondWith(isPage ? networkFirst(req) : cacheFirst(req));
 });
 
-self.addEventListener('notificationclick', event => {
-  event.notification.close();
-  event.waitUntil(clients.matchAll({type:'window', includeUncontrolled:true}).then(windowClients => {
-    for (const client of windowClients) {
-      if ('focus' in client) return client.focus();
-    }
-    if (clients.openWindow) return clients.openWindow('./');
-  }));
-});
+// Pages: prefer the network so UI updates reach users immediately; fall back to cache offline.
+async function networkFirst(req) {
+  const cache = await caches.open(CACHE_NAME);
+  try {
+    const res = await fetch(req);
+    if (res && res.status === 200) cache.put(req, res.clone());
+    return res;
+  } catch (err) {
+    return (await cache.match(req)) || (await cache.match('./index.html'));
+  }
+}
+
+// Other same-origin files (icons, manifest): serve from cache when available.
+async function cacheFirst(req) {
+  const cached = await caches.match(req);
+  if (cached) return cached;
+  const res = await fetch(req);
+  if (res && res.status === 200) {
+    const cache = await caches.open(CACHE_NAME);
+    cache.put(req, res.clone());
+  }
+  return res;
+}

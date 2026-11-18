@@ -144,7 +144,7 @@ nav.tabbar{position:fixed;bottom:0;left:0;right:0;display:flex;justify-content:s
 .toast.show{display:block}
 
 .tx-amount{font-variant-numeric:tabular-nums}
-.del{background:none;border:0;color:var(--red);font-size:20px;padding:0 4px;cursor:pointer}
+.del{background:none;border:0;color:var(--red);font-size:20px;padding:0;min-width:44px;min-height:44px;cursor:pointer}
 .swatch{width:10px;height:10px;border-radius:50%;display:inline-block;margin-right:6px}
 /* ================= Glossy "Liquid Glass" layer ================= */
 :root{
@@ -173,8 +173,6 @@ nav.tabbar{position:fixed;bottom:0;left:0;right:0;display:flex;justify-content:s
 
 body{background:var(--bg);overflow-x:hidden}
 body::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;opacity:var(--orb-op);background:radial-gradient(circle at 15% 12%,#5ac8fa 0,transparent 40%),radial-gradient(circle at 85% 45%,#af52de 0,transparent 40%)}
-body::after{display:none}
-:root[data-theme="light"] body::before{}
 .wrap{position:relative;z-index:0}
 
 /* Shared glass surface */
@@ -186,7 +184,11 @@ body::after{display:none}
   position:relative;
   overflow:hidden;
 }
-
+.group::before,.stat-grid::before{
+  content:"";position:absolute;inset:0;pointer-events:none;border-radius:inherit;
+  background:linear-gradient(165deg,rgba(255,255,255,.28) 0%,rgba(255,255,255,0) 38%);
+  opacity:var(--orb-op);
+}
 .stat-grid .cell+.cell:before{background:var(--sep)}
 .row+.row:before{background:var(--sep);opacity:.6}
 
@@ -198,8 +200,14 @@ body::after{display:none}
   border:1px solid rgba(255,255,255,.35);
   padding:22px 22px 20px;
 }
-
-
+.hero::before{
+  content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;
+  background:linear-gradient(160deg,rgba(255,255,255,.42) 0%,rgba(255,255,255,.08) 42%,rgba(255,255,255,0) 60%);
+}
+.hero::after{
+  content:"";position:absolute;width:240px;height:240px;right:-80px;top:-110px;border-radius:50%;
+  background:radial-gradient(circle,rgba(255,255,255,.35),rgba(255,255,255,0) 70%);pointer-events:none;
+}
 .hero>*{position:relative;z-index:1}
 .hero .balance{text-shadow:0 2px 14px rgba(0,0,60,.25)}
 
@@ -214,6 +222,7 @@ body::after{display:none}
 .btn.plain{
   background:var(--glassbg);color:var(--blue);
   border:1px solid var(--glassedge);
+  -webkit-backdrop-filter:blur(20px);backdrop-filter:blur(20px);
   box-shadow:var(--glasshi),0 4px 12px rgba(0,0,0,.05);
 }
 .btn.small{border-radius:999px}
@@ -273,7 +282,6 @@ nav.tabbar{
 
 .toast{background:rgba(30,30,34,.82);color:#fff;-webkit-backdrop-filter:blur(20px);backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,.15);box-shadow:0 10px 30px rgba(0,0,0,.25)}
 .badge{box-shadow:0 2px 6px rgba(255,59,48,.45),inset 0 1px 0 rgba(255,255,255,.4)}
-.header h1{background:linear-gradient(180deg,var(--label) 40%,var(--label2));-webkit-background-clip:text;background-clip:text;color:transparent}
 .header h1{background:none;color:var(--label)}
 </style>
 
@@ -299,7 +307,7 @@ nav.tabbar{
     <div class="hero-foot">
       <div><span>Income</span><b id="heroIncome">₹0</b></div>
       <div><span>Expenses</span><b id="heroExpense">₹0</b></div>
-      <div><span>Saved</span><b id="heroSaved">₹0</b></div>
+      <div><span>Left over</span><b id="heroSaved">₹0</b></div>
     </div>
   </div>
 
@@ -356,10 +364,10 @@ nav.tabbar{
   <div class="section-title"><span>Category budgets</span></div>
   <div class="group">
     <form id="categoryBudgetForm" style="margin:0">
-      <div class="field"><label>Category</label>
+      <div class="field"><label for="budgetCategory">Category</label>
         <select id="budgetCategory"><option>Food</option><option>Travel</option><option>Shopping</option><option>Bills</option><option>Health</option><option>Education</option><option>Entertainment</option><option>Other</option></select>
       </div>
-      <div class="field"><label>Limit (₹)</label><input id="categoryLimit" type="number" min="1" required placeholder="e.g. 3000"></div>
+      <div class="field"><label for="categoryLimit">Limit (₹)</label><input id="categoryLimit" type="number" inputmode="decimal" min="1" required placeholder="e.g. 3000"></div>
       <div style="padding:10px 16px"><button class="btn" type="submit">Save category budget</button></div>
     </form>
   </div>
@@ -417,16 +425,8 @@ nav.tabbar{
   </div>
   <div class="note">Records are stored locally in this browser. Clearing site data or changing devices can remove them unless you export a backup first.</div>
 
-  <div class="section-title" style="margin-top:22px"><span>Notifications</span></div>
-  <div class="group">
-    <div class="row"><div class="grow"><div class="title">System notifications</div><div class="meta" id="permissionStatus">Not requested</div></div><button class="btn small" id="enableBrowserNotifications">Enable</button></div>
-    <div id="fcmTokenArea" hidden style="padding:12px 16px">
-      <div class="meta" style="margin-bottom:6px">Device token (keep private)</div>
-      <textarea id="fcmTokenBox" readonly rows="3" style="width:100%;padding:10px;border:0;border-radius:10px;background:var(--card2);color:var(--label);font:11px ui-monospace,monospace;overflow-wrap:anywhere"></textarea>
-      <button class="btn small plain" id="copyFcmToken" style="margin-top:8px">Copy token</button>
-    </div>
-  </div>
-  <div class="note">Scheduled notifications while the app is fully closed need a native app or a properly configured installable web app.</div>
+  <div class="section-title" style="margin-top:22px"><span>Alerts</span></div>
+  <div class="note" style="padding:0 16px 22px">Budget alerts and daily summaries appear under the bell icon on the Summary tab. They are created while the app is open.</div>
 </section>
 
 </div>
@@ -442,7 +442,7 @@ nav.tabbar{
 </nav>
 
 <!-- Transaction sheet -->
-<div class="modal" id="transactionModal"><div class="sheet">
+<div class="modal" id="transactionModal" role="dialog" aria-modal="true"><div class="sheet">
   <div class="sheet-grab"></div>
   <div class="sheet-head"><button data-close="transactionModal">Cancel</button><h2 id="transactionTitle">Add expense</h2><button class="r" form="transactionForm" type="submit">Save</button></div>
   <form id="transactionForm">
@@ -452,50 +452,50 @@ nav.tabbar{
     </div>
     <input type="hidden" id="txType" value="expense">
     <div class="form-group">
-      <div class="field"><label>Amount</label><input id="txAmount" type="number" min="0.01" step="0.01" required placeholder="₹0.00"></div>
-      <div class="field"><label>Category</label>
+      <div class="field"><label for="txAmount">Amount</label><input id="txAmount" type="number" inputmode="decimal" min="0.01" step="0.01" required placeholder="₹0.00"></div>
+      <div class="field"><label for="txCategory">Category</label>
         <select id="txCategory"><option>Food</option><option>Travel</option><option>Shopping</option><option>Bills</option><option>Health</option><option>Education</option><option>Entertainment</option><option>Salary</option><option>Freelance</option><option>Other</option></select>
       </div>
-      <div class="field"><label>Date</label><input id="txDate" type="date" required></div>
-      <div class="field"><label>Note</label><input id="txNote" maxlength="100" placeholder="Optional"></div>
+      <div class="field"><label for="txDate">Date</label><input id="txDate" type="date" required></div>
+      <div class="field"><label for="txNote">Note</label><input id="txNote" maxlength="100" placeholder="Optional"></div>
     </div>
   </form>
 </div></div>
 
 <!-- Goal sheet -->
-<div class="modal" id="goalModal"><div class="sheet">
+<div class="modal" id="goalModal" role="dialog" aria-modal="true"><div class="sheet">
   <div class="sheet-grab"></div>
   <div class="sheet-head"><button data-close="goalModal">Cancel</button><h2>New goal</h2><button class="r" form="goalForm" type="submit">Create</button></div>
   <form id="goalForm">
     <div class="form-group">
-      <div class="field"><label>Name</label><input id="goalName" required maxlength="50" placeholder="e.g. New phone"></div>
-      <div class="field"><label>Target (₹)</label><input id="goalTarget" type="number" min="1" required></div>
-      <div class="field"><label>Saved (₹)</label><input id="goalSaved" type="number" min="0" value="0"></div>
-      <div class="field"><label>Target date</label><input id="goalDate" type="date"></div>
+      <div class="field"><label for="goalName">Name</label><input id="goalName" required maxlength="50" placeholder="e.g. New phone"></div>
+      <div class="field"><label for="goalTarget">Target (₹)</label><input id="goalTarget" type="number" inputmode="decimal" min="1" required></div>
+      <div class="field"><label for="goalSaved">Saved (₹)</label><input id="goalSaved" type="number" inputmode="decimal" min="0" value="0"></div>
+      <div class="field"><label for="goalDate">Target date</label><input id="goalDate" type="date"></div>
     </div>
   </form>
 </div></div>
 
 <!-- Budget sheet -->
-<div class="modal" id="budgetModal"><div class="sheet">
+<div class="modal" id="budgetModal" role="dialog" aria-modal="true"><div class="sheet">
   <div class="sheet-grab"></div>
   <div class="sheet-head"><button data-close="budgetModal">Cancel</button><h2>Monthly budget</h2><button class="r" form="budgetForm" type="submit">Save</button></div>
   <form id="budgetForm">
     <div class="form-group">
-      <div class="field"><label>Budget (₹)</label><input id="monthlyBudgetInput" type="number" min="1" required placeholder="e.g. 20000"></div>
+      <div class="field"><label for="monthlyBudgetInput">Budget (₹)</label><input id="monthlyBudgetInput" type="number" inputmode="decimal" min="1" required placeholder="e.g. 20000"></div>
     </div>
   </form>
 </div></div>
 
 <!-- Notifications sheet -->
-<div class="modal" id="notificationModal"><div class="sheet">
+<div class="modal" id="notificationModal" role="dialog" aria-modal="true"><div class="sheet">
   <div class="sheet-grab"></div>
   <div class="sheet-head"><button id="clearNotifications">Clear</button><h2>Notifications</h2><button class="r" data-close="notificationModal">Done</button></div>
   <div class="group" id="notificationList"><div class="empty">You're all caught up.</div></div>
 </div></div>
 
 <!-- Loan sheet -->
-<div class="modal" id="loanModal"><div class="sheet">
+<div class="modal" id="loanModal" role="dialog" aria-modal="true"><div class="sheet">
   <div class="sheet-grab"></div>
   <div class="sheet-head"><button data-close="loanModal">Cancel</button><h2>New entry</h2><button class="r" form="loanForm" type="submit">Save</button></div>
   <form id="loanForm">
@@ -504,28 +504,23 @@ nav.tabbar{
       <button type="button" data-loantype="borrowed">I borrowed</button>
     </div>
     <div class="form-group">
-      <div class="field"><label>Friend</label><input id="loanPerson" required maxlength="40" placeholder="Friend's name"></div>
-      <div class="field"><label>Amount</label><input id="loanAmount" type="number" min="0.01" step="0.01" required placeholder="₹0.00"></div>
-      <div class="field"><label>Date</label><input id="loanDate" type="date" required></div>
-      <div class="field"><label>Note</label><input id="loanNote" maxlength="100" placeholder="Optional"></div>
+      <div class="field"><label for="loanPerson">Friend</label><input id="loanPerson" required maxlength="40" placeholder="Friend's name"></div>
+      <div class="field"><label for="loanAmount">Amount</label><input id="loanAmount" type="number" inputmode="decimal" min="0.01" step="0.01" required placeholder="₹0.00"></div>
+      <div class="field"><label for="loanDate">Date</label><input id="loanDate" type="date" required></div>
+      <div class="field"><label for="loanNote">Note</label><input id="loanNote" maxlength="100" placeholder="Optional"></div>
     </div>
   </form>
 </div></div>
 
 <div class="toast" id="toast"></div>
 
-<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-messaging-compat.js"></script>
 <script>
 'use strict';
 const STORAGE_KEY='myFinance_v1';
 const THEME_KEY='myFinance_theme';
-const FIREBASE_CONFIG = {"apiKey":"AIzaSyBGFiYS89iQzDdZfqo6B-3D6pSoemqDBnc","authDomain":"myfinance-adaf1.firebaseapp.com","projectId":"myfinance-adaf1","storageBucket":"myfinance-adaf1.firebasestorage.app","messagingSenderId":"462114551555","appId":"1:462114551555:web:21e0d9a3eb42ec6e0adb36","measurementId":"G-L2674Y7E6N"};
-const FCM_VAPID_KEY = 'BKGsG38WOIYr8xvTO2z6DsBxvphYPI8eRofkFXCRmyIp1cPSmDcKBBFnJ_0FfpUqenu0ZLfCsefjVVNaEVrcyqs';
-let firebaseMessaging = null;
 
 const $=id=>document.getElementById(id);
-const today=()=>new Date().toISOString().slice(0,10);
+const today=()=>{const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;};
 const monthKey=()=>today().slice(0,7);
 const money=n=>new Intl.NumberFormat('en-IN',{style:'currency',currency:'INR',maximumFractionDigits:2}).format(Number(n)||0);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -556,6 +551,7 @@ function loadData(){
  if(!data.categoryBudgets||typeof data.categoryBudgets!=='object')data.categoryBudgets={};
  if(!Array.isArray(data.notifications))data.notifications=[];
  if(!Array.isArray(data.loans))data.loans=[];
+ if(!Array.isArray(data.seenAlerts))data.seenAlerts=[];
  data.entries=data.entries.map(x=>({...x,type:x.type||(x.kind==='income'?'income':'expense'),note:x.note??x.description??''}));
 }
 function saveData(){try{localStorage.setItem(STORAGE_KEY,JSON.stringify(data));}catch(e){showToast('Could not save. Export a backup and check storage.');}}
@@ -563,7 +559,8 @@ function showToast(msg){$('toast').textContent=msg;$('toast').classList.add('sho
 function monthEntries(){return data.entries.filter(x=>String(x.date||'').slice(0,7)===monthKey());}
 function totals(items){return items.reduce((a,x)=>{a[x.type]=(a[x.type]||0)+Number(x.amount||0);return a;},{income:0,expense:0});}
 function addNotification(title,message,key){
- if(data.notifications.some(n=>n.key===key))return;
+ if(data.seenAlerts.includes(key))return;
+ data.seenAlerts=[key,...data.seenAlerts].slice(0,500);
  data.notifications.unshift({id:Date.now()+Math.random(),key,title,message,createdAt:new Date().toISOString(),read:false});
  data.notifications=data.notifications.slice(0,80);
  saveData();
@@ -662,10 +659,12 @@ function setTxType(t){
   currentTxType=t;$('txType').value=t;
   document.querySelectorAll('[data-txtype]').forEach(b=>b.classList.toggle('on',b.dataset.txtype===t));
   $('transactionTitle').textContent=t==='income'?'Add income':'Add expense';
-  $('txCategory').value=t==='income'?'Salary':'Food';
+  const incomeCats=['Salary','Freelance','Other'];const cur=$('txCategory').value;
+  const fits=t==='income'?incomeCats.includes(cur):!['Salary','Freelance'].includes(cur);
+  if(!fits)$('txCategory').value=t==='income'?'Salary':'Food';
 }
 function openTransaction(type){
-  setTxType(type);$('txDate').value=today();$('txAmount').value='';$('txNote').value='';
+  setTxType(type);$('txCategory').value=type==='income'?'Salary':'Food';$('txDate').value=today();$('txAmount').value='';$('txNote').value='';
   $('transactionModal').classList.add('show');
 }
 function closeModal(id){$(id).classList.remove('show');}
@@ -678,39 +677,6 @@ function openNotifications(){
 }
 function exportBackup(){const payload={...data,exportedAt:new Date().toISOString(),app:'My Finance'};const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='my-finance-backup-'+today()+'.json';a.click();URL.revokeObjectURL(url);showToast('Backup exported');}
 
-async function requestBrowserNotifications(){
- try{
-  if(!('Notification' in window)){showToast('Notifications are not supported here.');return;}
-  if(!('serviceWorker' in navigator)){showToast('Service workers are not supported here.');return;}
-  if(!window.firebase || !firebase.messaging){showToast('Firebase did not load. Check your connection.');return;}
-  const permission=await Notification.requestPermission();
-  $('permissionStatus').textContent='Permission: '+permission;
-  if(permission!=='granted'){showToast('Allow notifications to continue.');return;}
-  if(!firebase.apps.length)firebase.initializeApp(FIREBASE_CONFIG);
-  firebaseMessaging=firebase.messaging();
-  const registration=await navigator.serviceWorker.register('./service-worker.js');
-  await navigator.serviceWorker.ready;
-  const token=await firebaseMessaging.getToken({vapidKey:FCM_VAPID_KEY,serviceWorkerRegistration:registration});
-  if(!token){$('permissionStatus').textContent='Granted, but no token was created.';showToast('Could not create notification token.');return;}
-  localStorage.setItem('myFinance_fcmToken',token);
-  $('fcmTokenBox').value=token;$('fcmTokenArea').hidden=false;
-  $('permissionStatus').textContent='Enabled';
-  showToast('System notifications enabled');
-  firebaseMessaging.onMessage(payload=>{
-   const title=payload.notification?.title||'My Finance';
-   const body=payload.notification?.body||'You have a new update.';
-   if('serviceWorker' in navigator){
-    navigator.serviceWorker.ready.then(reg=>reg.showNotification(title,{body,icon:'./icons/icon-192.png',badge:'./icons/icon-192.png',data:payload.data||{}}));
-   }
-   addNotification(title,body,'fcm-'+Date.now());
-   render();
-  });
- }catch(err){
-  console.error('FCM setup failed:',err);
-  $('permissionStatus').textContent='Setup failed: '+(err.message||String(err));
-  showToast('Notification setup failed.');
- }
-}
 
 /* ---------- Friends (money given to / borrowed from friends) ---------- */
 let loanType='lent';
@@ -817,17 +783,16 @@ $('restoreFile').onchange=async e=>{
   e.target.value='';
 };
 $('clearNotifications').onclick=()=>{data.notifications=[];saveData();render();$('notificationList').innerHTML='<div class="empty">Notifications cleared.</div>';};
-$('enableBrowserNotifications').onclick=requestBrowserNotifications;
-$('copyFcmToken').onclick=async()=>{const token=$('fcmTokenBox').value;if(token){try{await navigator.clipboard.writeText(token);showToast('Token copied');}catch(e){showToast('Select and copy the token manually.');}}};
 document.querySelectorAll('[data-close]').forEach(b=>b.onclick=()=>closeModal(b.dataset.close));
 document.querySelectorAll('.modal').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)closeModal(m.id);}));
 matchMedia('(prefers-color-scheme: dark)').addEventListener?.('change',()=>{if(!document.documentElement.hasAttribute('data-theme')||localStorage.getItem(THEME_KEY)==='system')applyTheme('system');});
 
+document.addEventListener('keydown',e=>{if(e.key==='Escape')document.querySelectorAll('.modal.show').forEach(m=>closeModal(m.id));});
+
 /* ---------- Boot ---------- */
 loadData();
 applyTheme(localStorage.getItem(THEME_KEY)||'system');
-const savedFcmToken=localStorage.getItem('myFinance_fcmToken');
-if(savedFcmToken){$('fcmTokenBox').value=savedFcmToken;$('fcmTokenArea').hidden=false;$('permissionStatus').textContent='Enabled on this device';}
+try{localStorage.removeItem('myFinance_fcmToken');}catch(e){}
 maybeDailySummary();render();
 </script>
 
